@@ -7,7 +7,7 @@ import os
 import platform
 
 def get_processes():
-    """Получает информацию о всех процессах и сохраняет её в JSON."""
+    """Получает информацию о всех процессах и сохраняет её в JSON файл."""
     processes = []
     os_type = platform.system() # Determine the OS type
 

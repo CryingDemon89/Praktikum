@@ -33,7 +33,7 @@ def save_received_file(data, file_format='json'):
                 json.dump(data, f, indent=4)
             elif file_format == 'txt':
                 f.write(data)
-        print(f'Файл сохранен: {filename}')
+        print(f'Файл сохранен успешно: {filename}')
     except Exception as e:
         print(f"Ошибка при сохранении файла: {e}")
 
