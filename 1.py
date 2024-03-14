@@ -50,3 +50,5 @@ def server_loop(port):
 if __name__ == '__main__':
     server_loop(48000)
 
+#изменения в vetka2
+    
