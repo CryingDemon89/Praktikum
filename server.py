@@ -45,17 +45,21 @@ def main():
                 process_json = json.dumps(process)
                 client_socket.sendall(process_json.encode('utf-8'))
             elif command == "set_directory":
-                new_directory = "C:\\Users\\Nata\\PycharmProjects\\pythonProject\\PR2"
+                # Универсальный путь к директории
+                new_directory = os.path.join(os.path.expanduser("~"), "PycharmProjects", "pythonProject", "PR2")
                 os.makedirs(new_directory, exist_ok=True)
                 os.chdir(new_directory)
                 client_socket.sendall(b"Directory changed successfully.")
             elif command == "get_file_info":
-                file_info = get_file_info("../../Downloads")
+                # Универсальный путь к директории
+                downloads_directory = os.path.join(os.path.expanduser("~"), "Downloads")
+                file_info = get_file_info(downloads_directory)
                 json_data = json.dumps(file_info)
                 client_socket.sendall(bytes(json_data, encoding="utf-8"))
             elif command == "move":
-                source_file = "C:\\Users\\Nata\\PycharmProjects\\pythonProject\\received_file.json"
-                destination_directory = "C:\\Users\\Nata\\PycharmProjects\\pythonProject\\PR2"
+                # Универсальные пути к файлам
+                source_file = os.path.join(os.path.expanduser("~"), "PycharmProjects", "pythonProject", "received_file.json")
+                destination_directory = os.path.join(os.path.expanduser("~"), "PycharmProjects", "pythonProject", "PR2")
                 shutil.move(source_file, destination_directory)
                 client_socket.sendall(b"File moved successfully.")
             elif command == "exit":
