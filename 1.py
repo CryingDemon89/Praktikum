@@ -1,54 +1,66 @@
-import os
-import json
-from datetime import datetime
+# программа1
+import shutil
 import socket
-
+import json
 import os
-import platform
-
-def get_processes():
-    """Получает информацию о всех процессах и сохраняет её в JSON файл."""
-    processes = []
-    os_type = platform.system() # Determine the OS type
-
-    if os_type == 'Windows':
-        # For Windows, use 'tasklist' command
-        command = 'tasklist'
-    elif os_type in ['Linux', 'Darwin']:
-        # For Linux and macOS, use 'ps aux' command
-        command = 'ps aux'
-   
-    for process in os.popen(command).readlines():
-        processes.append(process.strip()) # удаляет пробелы в начале и конце строки strip()
-
-    return processes
+import time
 
 
+def get_file_info(path):
+    file_info = {}
+    for root, dirs, files in os.walk(path):
+        file_info[root] = {
+            "dirs": dirs,
+            "files": files
+        }
+    return file_info
 
-def server_loop(port):
-    """Запускает сервер, который слушает на указанном порту."""
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: # создает новый сокет. socket.AF_INET указывает, что сокет будет использовать IPv4 для сетевых адресов
-        s.bind(('localhost', port)) #s.bind() привязывает сокет к определенному адресу и порту
-        s.listen()
-        print(f"Сервер запущен на порту {port}. Ожидание подключений...")
-        while True:
-            conn, addr = s.accept() #s.accept() блокирует выполнение кода, пока не будет установлено соединение с клиентом. Когда соединение установлено, s.accept() возвращает два значения: объект соединения (conn) и адрес клиента (addr).
-            with conn:
-                print(f"Подключение от {addr}")
-                data = conn.recv(1024) # читает до 1024 байт данных из соединения
-                command = data.decode()  #преобразует байты в текст
-                if command == 'update_processes':
-                    process = get_processes()
-                    # Преобразование списка процессов в JSON
-                    process_json = json.dumps(process)
-                    conn.sendall(process_json.encode('utf-8')) ##Отправляет информауию обратно клиенту.  кодируется в байты с использованием UTF-8 перед отправкой.
+
+def main():
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind(('localhost', 12347))
+    server_socket.listen()
+    while True:
+        print("Ждем подключения от программы 2...")
+        client_socket, addr = server_socket.accept()
+        print("Подключение установлено!")
+        with client_socket:
+            command = client_socket.recv(1024).decode()
+            if command == "set_directory":
+                new_directory = "C:\\Users\\Nata\\PycharmProjects\\pythonProject\\PR2"
+                os.makedirs(new_directory)
+                if os.path.isdir(new_directory):
+                    os.chdir(new_directory)
+                    client_socket.sendall(b"Directory changed successfully.")
                 else:
-                    conn.sendall('Неизвестная команда.'.encode('utf-8'))
+                    time.sleep(3)
+                    if os.path.isdir(new_directory):
+                        os.chdir(new_directory)
+                        client_socket.sendall(b"Directory changed successfully.")
+                    else:
+                        client_socket.sendall(b"Invalid directory.")
 
-                
+            elif command == "get_file_info":
+                file_info = get_file_info("../../Downloads")
+                json_data = json.dumps(file_info)
+                client_socket.sendall(bytes(json_data, encoding="utf-8"))
+                print('!', json_data)
 
-if __name__ == '__main__':
-    server_loop(48000)
+            elif command == "move":
+                def move_file(source_file, destination_directory):
+                    shutil.move(source_file, destination_directory)
 
-#изменения в vetka2
-    
+                source_file = "C:\\Users\\Nata\\PycharmProjects\\pythonProject\\received_file.json"
+                destination_directory = "C:\\Users\\Nata\\PycharmProjects\\pythonProject\\PR2"
+
+                move_file(source_file, destination_directory)
+
+            elif command == "exit":
+                break
+
+            else:
+                client_socket.sendall(b"Invalid command.")
+
+
+if __name__ == "__main__":
+    main()
